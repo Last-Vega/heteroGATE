@@ -37,7 +37,6 @@ train_data, val_data, test_data = T.RandomLinkSplit(
     rev_edge_types=[('movie', 'rev_rates', 'user')],
 )(data)
 
-print(train_data['user'].shape)
 
 # print(train_data['user', 'movie'].edge_label_index)
 
@@ -66,8 +65,8 @@ class GNNEncoder(torch.nn.Module):
     def forward(self, x, edge_index):
         x = self.conv1(x, edge_index)
         x = x.relu()
-        x = self.conv2(x, edge_index)
-        return x
+        x, w = self.conv2(x, edge_index, return_attention_weights=True)
+        return x, w
 
 
 class EdgeDecoder(torch.nn.Module):
@@ -93,8 +92,9 @@ class Model(torch.nn.Module):
         self.decoder = EdgeDecoder(hidden_channels)
 
     def forward(self, x_dict, edge_index_dict, edge_label_index):
-        z_dict = self.encoder(x_dict, edge_index_dict)
+        z_dict, weight = self.encoder(x_dict, edge_index_dict)
         self.z_dict = z_dict
+        self.W = weight
         return self.decoder(z_dict, edge_label_index)
 
 
@@ -139,4 +139,5 @@ for epoch in range(1, 11):
     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_rmse:.4f}, '
           f'Val: {val_rmse:.4f}, Test: {test_rmse:.4f}')
 
-print(model.z_dict['user'].shape)
+print(model.z_dict['user'])
+print(model.W)
