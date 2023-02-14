@@ -28,6 +28,9 @@ del data['user'].num_nodes
 data = T.ToUndirected()(data)
 del data['movie', 'rev_rates', 'user'].edge_label  # Remove "reverse" label.
 
+print(data)
+exit()
+
 # Perform a link-level split into training, validation, and test edges:
 train_data, val_data, test_data = T.RandomLinkSplit(
     num_val=0.1,
@@ -50,8 +53,14 @@ else:
 
 
 def weighted_mse_loss(pred, target, weight=None):
-    weight = 1. if weight is None else weight[target].to(pred.dtype)
-    return (weight * (pred - target.to(pred.dtype)).pow(2)).mean()
+    # weight = 1. if weight is None else weight[target].to(pred.dtype)
+    # return (weight * (pred - target.to(pred.dtype)).pow(2)).mean()
+    # print(pred.view(-1))
+    # print(type(pred))
+    print(target.to(pred.dtype))
+    exit()
+    loss = F.binary_cross_entropy(pred.view(-1), target.to_dense().view(-1))
+    return loss
 
 
 class GNNEncoder(torch.nn.Module):
@@ -139,5 +148,5 @@ for epoch in range(1, 11):
     print(f'Epoch: {epoch:03d}, Loss: {loss:.4f}, Train: {train_rmse:.4f}, '
           f'Val: {val_rmse:.4f}, Test: {test_rmse:.4f}')
 
-print(model.z_dict['user'])
-print(model.W)
+# print(model.z_dict['user'])
+print(model.W['movie'])
